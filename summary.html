@@ -1,0 +1,113 @@
+<!doctype html>
+	<head>
+		<title>Web Page Request</title>
+		<script src="js/jquery-1.11.0.min.js"></script>
+		<script src="js/purl.js"></script>
+        <script src="js/jquery.touchSwipe.min.js"></script>
+		<link rel="stylesheet" href="css/style.css">
+
+   <script>
+       var muteOverride = false;
+    $(function(){
+        $("#background-video").bind('ended', function () {
+            changeVideoControlImages();
+            returnHome();
+        });
+        var img = $("#play-pause");
+        img.attr("src","img/icons/Pause_Icon.png");
+        var img2 = $("#mute-unmute");
+        img2.attr("src","img/icons/SoundOn_Icon.png");
+
+        $("#main-container").swipe( {
+            //Generic swipe handler for all directions
+            swipeLeft:function(event, direction, distance, duration, fingerCount) {
+                returnHome();
+            },
+            swipeRight:function(event, direction, distance, duration, fingerCount) {
+                returnHome();
+            }
+        });
+        $("#background-video").click(function() {
+            playPauseVideo();
+        });
+    });//End of DOM ready
+
+    function returnHome()
+    {
+        window.location = "../index.html?drawspeed=fast";
+    }
+    //end of Function - returnHome
+
+    function changeVideoControlImages() {
+       var img = $("#play-pause");
+       var imgMute = $("#mute-unmute");
+       if (img.attr('src') == "img/icons/Play_Icon.png") {
+           img.attr("src", "img/icons/Pause_Icon.png");
+           if (!muteOverride) {
+               imgMute.attr("src", "img/icons/SoundOn_Icon.png");
+           }
+       } else {
+           $("#main-play").fadeIn(300);
+           img.attr("src", "img/icons/Play_Icon.png");
+           if (!muteOverride) {
+               imgMute.attr("src", "img/icons/SoundOff_Icon.png");
+           }
+       }
+    }
+
+    //Play-Pause Video
+    function playPauseVideo(){
+         var img = $("#play-pause");
+         if(img.attr('src') == "img/icons/Play_Icon.png") {
+              $("#background-video").get(0).play();
+         } else {
+              $("#background-video").get(0).pause();
+         }
+         changeVideoControlImages();
+    }//End of Function -playPauseVideo
+
+     //Mute-UnMute Video
+    function muteUnmuteVideo() {
+        var img = $("#mute-unmute");
+        muteOverride = !muteOverride;
+        if (img.attr('src') == "img/icons/SoundOn_Icon.png") {
+            $("#background-video").prop("muted", true);
+            img.attr("src", "img/icons/SoundOff_Icon.png");
+        } else {
+            $("#background-video").prop("muted", false);
+            img.attr("src", "img/icons/SoundOn_Icon.png");
+        }
+    }//End of Function -muteUnmuteVideo
+
+   </script>
+
+
+	</head>
+	<body style="overflow:hidden;-ms-touch-action:none" oncontextmenu="return false;">
+		<div id="main-container">
+            <div class="background-video">
+                <video  autoplay id="background-video" style="width:1920px; height: 1080px"><source src="video/LAB%20INTRO_revision_v1_mpg.mov" type="video/mp4" /></video>
+            </div>
+        </div>
+        
+        <div style="-ms-touch-action:none" id="control-container" >
+        	  <img class="next-button" src="img/icons/Next_Button.png" alt="Next" id="nextButton" onclick="returnHome();" />
+	        <div id="more-control-div">
+           </div>
+
+            <div class="video-controls" id="home-div" onclick="returnHome()">
+                <img src="img/icons/Home_Icon.png" id="home"/>
+            </div>
+            <div class="video-controls" id="play-pause-div" onclick="playPauseVideo()">
+                <img src="img/icons/Play_Icon.png" id="play-pause"/>
+            </div>
+            <div class="video-controls" id="mute-unmute-div" onclick="muteUnmuteVideo()">
+                <img src="img/icons/SoundOn_Icon.png" id="mute-unmute" alt="Un mute"/>
+            </div>
+
+            <!-- <img class="video-controls" src="img/icons/Home_Icon.png" alt="Pause" id="home" onclick="returnHome()" />
+            <img class="video-controls" src="img/icons/Play_Icon.png" alt="Pause" id="play-pause" onclick="playPauseVideo()" />
+            <img class="video-controls" src="img/icons/SoundOn_Icon.png" alt="Un mute" id="mute-unmute" onclick="muteUnmuteVideo()" /> -->
+        </div>
+	</body>
+</html>

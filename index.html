@@ -1,0 +1,934 @@
+<!doctype html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Web Page Request</title>
+<script src="js/jquery-1.11.0.min.js"></script>
+<script src="js/purl.js"></script>
+<script src="js/jquery.touchSwipe.min.js"></script>
+<script src="js/font.js"></script>
+<link rel="stylesheet" href="css/style.css">
+<script src="savelives/1.0%20ANTI%20SEPSIS/data.js"></script>
+<script src="savelives/2.0%20NUTRITION/data.js"></script>
+<script src="savelives/3.0%20STATISTICS/data.js"></script>
+<script src="savelives/4.0%20PENICILLIN/data.js"></script>
+<script src="savelives/5.0%20VACCINES/data.js"></script>
+<script src="savelives/6.0%20NIH/data.js"></script>
+<script src="savelives/7.0%20CARDIAC%20CATH/data.js"></script>
+
+<script>
+
+//configuration
+var pages = [];
+var selectedPage = "";
+var pageData = {};
+var selectedPageIndex = 0;
+var pageSmallImages = {};
+var pageLargeImages = {};
+var pageLargeImageFooter = {};
+var animationInProgress = false;
+var animationStarted = false;
+var closeLargeImageAfterAnimation = false;
+var pageBackgroundImages = {};
+var pageBackgroundCaptions = {};
+var pageBackgroundVideos = {};
+var pageBackgroundVideoLeadImages = {};
+var pageReferences = {};
+
+
+var largeImageMaxWidth;
+var largeImageMaxHeight;
+var mainPageTimeout = 300000; //Milliseconds, so 1000 == 1 second.
+var fadeInArrowTime = 20000;
+var firstFadeInTime = 750;
+
+var mainTimeoutID = 0;
+var arrowTimeoutID = 0;
+var firstFadeInTimeoutID = 0;
+
+var finalURL = "";
+var ignoreClick = false;
+var muteOverride = false;
+var videoPlaying = false;
+
+//DOM ready
+$(function () {
+    var pageName = $.url().param("pagename");
+    var pageNameSplit = pageName.split("-");
+    switch (pageNameSplit[0]) {
+        case "0":
+            initializeVariables(configOne);
+            break;
+        case "1":
+            initializeVariables(configTwo);
+            break;
+        case "2":
+            initializeVariables(configThree);
+            break;
+        case "3":
+            initializeVariables(configFour);
+            break;
+        case "4":
+            initializeVariables(configFive);
+            break;
+        case "5":
+            initializeVariables(configSix);
+            break;
+        case "6":
+            initializeVariables(configSeven);
+            break;
+				case "7":
+            initializeVariables(configEight);
+            break;
+        case "8":
+            initializeVariables(configNine);
+            break;
+        case "9":
+            initializeVariables(configTen);
+            break;
+    }
+
+
+    $(".arrow").click(function () {
+        loadNextPrevPageOrFinalUrl(this.id);
+    });
+    $("#main-container").swipe({
+        tap: function (event, target) {
+            clearOpenImage();
+        },
+        doubleTap: function (event, target) {
+            clearOpenImage();
+        },
+        //Generic swipe handler for all directions
+        swipeLeft: function (event, direction, distance, duration, fingerCount) {
+            loadNextPrevPageOrFinalUrl("next");
+        },
+        swipeRight: function (event, direction, distance, duration, fingerCount) {
+            loadNextPrevPageOrFinalUrl("prev");
+        },
+        swipeUp: function (event, direction, distance, duration, fingerCount) {
+        },
+        swipeDown: function (event, direction, distance, duration, fingerCount) {
+        }
+    });
+
+    $("#control-container").swipe({
+        //Generic swipe handler for all directions
+        tap: function (event, target) {
+            //Pass the tap down as a click
+            if(event.touches) {
+                target.click();
+            }
+        },
+        swipeLeft: function (event, direction, distance, duration, fingerCount) {
+            loadNextPrevPageOrFinalUrl("next");
+        },
+        swipeRight: function (event, direction, distance, duration, fingerCount) {
+            loadNextPrevPageOrFinalUrl("prev");
+        }
+    });
+
+    $("#accordian h3").click(function(){
+        ignoreClick = true;
+        //slide up all the link lists
+        $("#accordian ul ul").slideUp();
+        //slide down the link list below the h3 clicked - only if its closed
+        if(!$(this).next().is(":visible"))
+        {
+            $(this).next().slideDown();
+        }
+    });
+
+    $('.main_menu li h3').click(function() {
+        $('.main_menu li h3').removeClass('active');
+        $(this).addClass('active');
+    });
+    //disbale able pinch zoom.
+    //document.addEventListener('touchmove', function(event){ if (event.touches.length === 2) {event.stopPropagation(); event.preventDefault();} });
+
+    $(window).click(function () {
+        if(ignoreClick)
+        {
+            ignoreClick = false;
+        }else
+        {
+            $("#accordian").hide();
+            clearOpenImage();
+        }
+    });
+});//End of DOM ready
+function clearOpenImage() {
+    if (animationInProgress && $("#largeImage").is(":animated")) {
+        closeLargeImageAfterAnimation = true;
+    }
+    if (!animationStarted && !animationInProgress) {
+        resetLargeImageArea();
+    }
+}
+//function reset large image
+function resetLargeImageArea() {
+    if($("#large-image-container").get(0).innerHTML != "" &&
+       $("#large-image-container").get(0).innerHTML.indexOf(".mov") > 0) {
+        var img = $("#play-pause");
+        img.attr("src", "img/icons/Play_Icon.png");
+    }
+
+    $("#large-image-container").html("");
+    $("#large-image-name").html("");
+    $("#large-image-footer-inner").html("");
+    $("#large-image-footer").css({
+        "left": "0px",
+        "top": "0px",
+        "width": "0px",
+        "height": "0px"
+    });
+    $("#image1").toggleClass("selectedLayerSmallImage", false);
+    $("#image2").toggleClass("selectedLayerSmallImage", false);
+    $("#image3").toggleClass("selectedLayerSmallImage", false);
+    $("#image4").toggleClass("selectedLayerSmallImage", false);
+
+}//End of Function - resetLargeImageArea
+
+//function to initialize variables
+function initializeVariables(_config) {
+    var configPages = _config.pages;
+    finalURL = _config.finalURL;
+
+    $("#header-title").css({"color": _config.headerColor});
+    for (index in configPages) {
+        var page = configPages[index];
+        var pagename = page["pagename"];
+        pages.push(pagename);
+
+        pageData[pagename] = {};
+        pageData[pagename]["pageType"] = page["pageType"];
+        pageData[pagename]["headerText"] = page["details"]["headerText"];
+        pageData[pagename]["storyTitle"] = page["details"]["storyTitle"];
+        pageData[pagename]["storyBody"] = page["details"]["storyBody"];
+        pageData[pagename]["storySummary"] = page["details"]["storySummary"];
+
+        //to set page images
+        var pageDetails = page["details"];
+        var largeImages = {};
+        var smallImages = {};
+        var largeImageFooterText = {};
+        <!--jk-->
+        for (key in pageDetails) {
+            if (pageDetails[key]) {
+                if (key.indexOf("filename") !== -1) {
+                    if (key.indexOf("Largefilename") !== -1) {
+                        var imageName = key.split("Largefilename")[0];
+                        largeImages[imageName] = pageDetails[key];
+                        pageLargeImages[pagename] = largeImages;
+                    } else {
+                        var imageName = key.split("filename")[0];
+                        smallImages[imageName] = pageDetails[key];
+                        pageSmallImages[pagename] = smallImages;
+                    }
+                } else if (key.indexOf("backgroundImage") !== -1) {
+                    pageBackgroundImages[pagename] = pageDetails[key];
+                } else if (key.indexOf("backgroundCaption") !== -1) {
+                    pageBackgroundCaptions[pagename] = pageDetails[key];
+                } else if (key.indexOf("backgroundVideo") !== -1) {
+                    if (key.indexOf("backgroundVideoLeadImage") !== -1) {
+                        pageBackgroundVideoLeadImages[pagename] = pageDetails[key];
+                    } else {
+                        pageBackgroundVideos[pagename] = pageDetails[key];
+                    }
+                } else if (key.indexOf("FooterText") !== -1) {
+                    var imageName = key.split("FooterText")[0];
+                    largeImageFooterText[imageName] = pageDetails[key];
+                    <!--jk-->
+                    pageLargeImageFooter[pagename] = largeImageFooterText;
+                    <!--jk-->
+                } else if (key.indexOf("references") !== -1)
+                {
+                    pageReferences[pagename] = pageDetails[key];
+                }
+            }
+        }
+    }
+    var flag = false;
+    var pageName = $.url().param("pagename");
+    var pageNameSplit = pageName.split("-");
+    var currentPageName = pageNameSplit[1];
+
+    //Change out high ascii "" for comparing page names.
+    currentPageName = currentPageName.replace(String.fromCharCode(8220),"&#8220")
+                                    .replace(String.fromCharCode(8221),"&#8221")
+                                    .replace(String.fromCharCode(8217),"&#8217");
+    if (currentPageName) {
+        for (index in configPages) {
+            if (currentPageName == pages[index]) {
+                selectedPage = pages[index]
+                selectedPageIndex = index;
+                flag = true;
+                break;
+            }
+        }
+    }
+    if (!flag && pages[0]) {
+        selectedPage = pages[0];
+        selectedPageIndex = 0;
+    }
+    loadSelectedPage();
+}//End of Function - initializeVariables
+
+//function to display next or prev icons
+function displayNextOrPrevIcons() {
+    if (selectedPageIndex == 0) {
+       // $("#next").fadeIn('normal');
+    } else {
+       // $(".arrow").fadeIn('normal');
+    }
+}//End of Function -  displayNextOrPrevIcons
+
+function returnHome() {
+    window.location = finalURL;
+}
+//end of Function - returnHome
+//function to load next/prev page or redirect to final url
+function loadNextPrevPageOrFinalUrl(id) {
+    if (id == "next") { //next
+        if ((pages.length - 1) == selectedPageIndex) { //redirect to final url
+            returnHome();
+        } else {  //load next page
+            selectedPageIndex++;
+        }
+    } else { //prev
+        selectedPageIndex--;
+        var tempSelectedPage = pages[selectedPageIndex];
+        if (pageData[tempSelectedPage].pageType == "skipPage") {
+            if(selectedPageIndex === 0) {
+                selectedPageIndex ++;
+                return;
+            }
+            selectedPageIndex--;
+        }else
+        {
+            selectedPage = tempSelectedPage
+        }
+    }
+    resetLargeImageArea();
+    displayNextOrPrevIcons();
+    selectedPage = pages[selectedPageIndex];
+    $("#body-text").scrollTop(0);
+    loadSelectedPage();
+    $("#large-image-name").html("");
+}//End of Function -  loadNextPrevPageOrFinalUrl
+
+function clearMainTimeout()
+{
+    if (mainTimeoutID !== 0) {
+        clearTimeout(mainTimeoutID);
+    }
+}
+function startMainTimeout ()
+{
+    mainTimeoutID = setTimeout(function() {
+        returnHome();
+    },mainPageTimeout);
+}
+function restartMainTimeout()
+{
+    clearMainTimeout();
+    startMainTimeout();
+}
+//function to load selected page
+function loadSelectedPage() {
+    if (firstFadeInTimeoutID !== 0) {
+        clearTimeout(firstFadeInTimeoutID);
+    }
+    if (arrowTimeoutID !== 0) {
+        clearTimeout(arrowTimeoutID);
+    }
+    clearMainTimeout();
+
+    if (selectedPageIndex == 0) {
+        $("#backButton").hide();
+    } else {
+        $("#backButton").show();
+    }
+
+    $(".arrow").hide();
+    $("#body-text").hide();
+    $("#image1").hide();
+    $("#image2").hide();
+    $("#image3").hide();
+    $("#image4").hide();
+    $("#section-summary").hide();
+    $("#sources-click-div").hide();
+
+    $("#page-type").html(pageData[selectedPage].pageType);
+    $("#header-title").html(pageData[selectedPage].headerText);
+    $("#story-title").html(pageData[selectedPage].storyTitle);
+
+    $("#main-container").css("background-image", "");
+    $("#background-video-container").html("");
+    $("#background-video-container").hide();
+    
+    $("#main-image-container").html("");
+    $("#main-image-container").hide();
+    $("#main-play").stop();
+    $("#main-play").hide();
+    var largeAsset = false;
+    if (pageData[selectedPage].pageType == "skipPage") {
+        loadNextPrevPageOrFinalUrl("next")
+        return;
+    }else if (pageData[selectedPage].pageType == "categorySummary") {
+        $("#story-summary").html("");
+        $("#section-summary").html(pageData[selectedPage].storySummary);
+        $("#nextButton-div").removeClass('next-button-opac');
+        // $("#sources-icon-div").hide();
+        largeAsset = true;
+    } else { //Detail page
+        $("#nextButton-div").addClass('next-button-opac');
+        $("#backButton-div").addClass('back-button-opac');
+        $("#story-summary").html(pageData[selectedPage].storySummary);
+       // $("#sources-icon-div").fadeIn(100);
+    }
+    if (pageBackgroundImages[selectedPage]) {
+        setBackgroundImage(largeAsset);
+    } else if (pageBackgroundVideos[selectedPage]) {
+
+        setBackgroundVideo(largeAsset);
+        var video = $('#background-video');
+        //remove default control when JS loaded
+        video[0].removeAttribute("controls");
+        if (pageData[selectedPage].pageType == "categorySummary") {
+            video[0].onended = function (e) {
+                loadNextPrevPageOrFinalUrl("next");
+            }
+            $("#section-summary").fadeIn(3000);
+            $("#background-video-container").fadeIn(3000);
+            $("#main-play").fadeIn(3000);
+        }
+    }
+
+    if(!pageReferences[selectedPage])
+    {
+        $("#sources-icon-div").css({
+            "opacity": ".25"
+        });
+    }else
+    {
+        $("#sources-icon-div").css({
+            "opacity": ".4"
+        });
+    }
+    firstFadeInTimeoutID = setTimeout(function () {
+        firstFadeIn();
+    }, firstFadeInTime);
+    
+   /* arrowTimeoutID = setTimeout(function () {
+        displayNextOrPrevIcons();
+    }, fadeInArrowTime);
+*/
+    startMainTimeout();
+}//End of Function - loadSelectedPage
+
+function firstFadeIn() {
+    $("#body-text").html(pageData[selectedPage].storyBody);
+    if (pageData[selectedPage].pageType == "largeTallStaticImage") {
+        $("#image1").css({"top": "293px"});
+        $("#image2").css({"top": "549px"});
+        $("#image3").css({"top": "805px"});
+        $("#image4").css({"top": "-805px"});//not supported
+        $(".smallImage").css({"left": "73px"});
+        $("#large-image-container").css({
+            "left": "297px",
+            "top": "37px",
+            "max-width": "878px",
+            "max-height": "1006px"
+        });
+        largeImageMaxWidth = 878;
+        largeImageMaxHeight = 1006;
+    } else if (pageData[selectedPage].pageType == "largeWideStaticImage") {
+        $("#image1").css({"top": "549px"});
+        $("#image2").css({"top": "805px"});
+        $("#image3").css({"top": "1011px"});
+        $("#image4").css({"top": "-805px"});//not supported
+        $(".smallImage").css({"left": "73px"});
+        $("#large-image-container").css({
+            "left": "297px",
+            "top": "293px",
+            "max-width": "878px",
+            "max-height": "750px"
+        });
+        largeImageMaxWidth = 878;
+        largeImageMaxHeight = 750;
+    } else if (pageData[selectedPage].pageType == "detailImage") {
+        $("#image1").css({"top": "293px"});
+        $("#image2").css({"top": "549px"});
+        $("#image3").css({"top": "805px"});
+        $("#image4").css({"top": "37px"});
+        $(".smallImage").css({"left": "73px"});
+        $("#large-image-container").css({
+            "left": "297px",
+            "top": "293px",
+            "max-width": "878px",
+            "max-height": "640px"
+        });
+        largeImageMaxWidth = 878;
+        largeImageMaxHeight = 640;
+    }
+
+    if (pageSmallImages[selectedPage]) {
+        displaySmallImages(pageSmallImages[selectedPage]);
+    }
+
+    if (pageData[selectedPage].pageType == "detailImage") {
+        $("#image1").fadeIn(3000);
+        $("#image2").fadeIn(3000);
+        $("#image3").fadeIn(3000);
+        $("#image4").fadeIn(3000);
+        $("#body-text").fadeIn(3000);
+        if (pageBackgroundImages[selectedPage]) {
+        	$("#main-image-container").fadeIn(3000);
+            //Fade in caption if exists.
+        }else
+        {
+	        //$("#more-control-div").fadeIn(3000);
+	        $("#background-video-container").fadeIn(3000);
+	        $("#main-play").fadeIn(3000);
+	    }
+    }
+}
+
+//function to display small images
+function displaySmallImages(pageSmallImages) {
+    var cnt = 1;
+    for (var i = 1; i < 5; i++) {
+        $("#image" + i).html("");
+    }
+    for (var key in pageSmallImages) {
+        if (cnt < 5) {
+            $("#image" + cnt).html("");
+            $("#image" + cnt).append("<img width='206' height='238' src='"+ pageSmallImages[key] + "'onclick='animateLargeImageBySmallImageName(\"" + key + "\"); $(\"#image" + cnt + "\" ).toggleClass(\"selectedLayerSmallImage\");'/>");
+            cnt++;
+        } else {
+            break;
+        }
+    }
+}//End of Function - displaySmallImages
+
+//function to animate large image by small image name
+function animateLargeImageBySmallImageName(smallImageName) {
+    if (!animationInProgress) {
+
+        var largeImageName = pageLargeImages[selectedPage][smallImageName];
+        var imageName = largeImageName.split('_')[3];
+        var imageDimensions = imageName.split('.')[0];
+        var dimensions = imageDimensions.split('x');
+        var width = dimensions[0];
+        var height = dimensions[1];
+        if (width && height) {
+            var currentLargeImageName = $("#largeImage").attr("image-name");
+            if (currentLargeImageName && currentLargeImageName == largeImageName) {   //if clicks on same image
+                resetLargeImageArea();
+            } else {
+                animateLargeImageFromTopLeftToBottomRight(largeImageName, width, height, pageLargeImageFooter[selectedPage][smallImageName]);
+            }
+        }
+        $("#large-image-name").html(largeImageName);
+    }
+}//End of Function - animateLargeImageBySmallImageName
+
+
+//function to animate large image by height and width
+function animateLargeImageFromTopLeftToBottomRight(largeImageName, width, height, footerText) {
+    restartMainTimeout();
+    if (width > largeImageMaxWidth) {
+        width = largeImageMaxWidth;
+    }
+    if (height > largeImageMaxHeight) {
+        height = largeImageMaxHeight;
+    }
+    var divTop = parseInt(height) + 290;
+    resetLargeImageArea();
+    if (largeImageName.indexOf(".mov") > 0)
+    {
+        if($("#background-video").get(0)) {
+            $("#background-video").get(0).pause();
+            $("#main-play").fadeIn(300);
+        }
+
+        $("#large-image-container").append("<img src='img/icons/LgPlayButton.png' style='display:none; position: absolute; z-index: 10;width: 139px;height: 139px;opacity: .5; top:"+((height /2)-69)+"px; left:"+((width /2)-69)+"px' id='smMain-play' onclick='playPauseVideo()'/>");
+
+        $("#large-image-container").append("<video id='largeImage' image-name='" + largeImageName + "' preload='auto' autoplay><source src='" + largeImageName + "' type='video/mp4'/></video>");
+        var img = $("#play-pause");
+        img.attr("src", "img/icons/Pause_Icon.png");
+        if(muteOverride) {
+            $("#largeImage").prop("muted", true);
+        }
+        $("#largeImage").bind('ended', function () {
+            this.currentTime = 0;
+            this.pause();//Need this since we are auto playing.
+            changeVideoControlImages();
+        });
+        $("#largeImage").bind('click', function () {
+            playPauseVideo();
+        });
+    }
+    else {
+        /*if(videoPlaying)
+        {
+            playPauseVideo();
+        }*/
+        $("#large-image-container").append("<img id='largeImage' image-name='" + largeImageName + "'  src='" + largeImageName + "'  height='0' width='0'/>");
+    }
+    $("#largeImage").animate({
+        width: width,
+        height: height
+    }, {
+        duration: 300,
+        step: function (now, fx) {
+            // Change color to red when the animation is halfways done
+            if (fx.pos == 0) {
+                animationStarted = true;
+            }
+            if (fx.pos > 0.1) {
+                animationInProgress = true;
+            }
+            if (fx.pos == 1) {
+                animationInProgress = false;
+                if (closeLargeImageAfterAnimation) {
+                    resetLargeImageArea();
+                }
+                closeLargeImageAfterAnimation = false;
+                animationStarted = false;
+            }
+        },
+        complete: function () {
+            //When tapping with two fingers the contextMenu is rejected and the inner html is removed.  Odd case.
+            if ($("#large-image-container").html() === "")
+            {
+                animateLargeImageFromTopLeftToBottomRight(largeImageName, width, height, footerText);
+            }else {
+                $("#large-image-footer").hide();
+                $("#large-image-footer").css({
+                    "background-color": "#292929",
+                    "z-index": "100",
+                    "display": "table",
+                    "position": "absolute",
+                    "left": "297px",
+                    "top": divTop + "px",
+                    "width": width,
+                    "min-height": "110px"
+                });
+                $("#large-image-footer-inner").html(footerText);
+                $("#large-image-footer").show();
+            }
+        }
+    });
+}//End of Function - animateLargeImage
+
+//function to set background image for page
+function setBackgroundImage(largeAsset) {
+    var backgroundImage = pageBackgroundImages[selectedPage];
+
+    if (backgroundImage && largeAsset) {
+        $("#main-image-container").css({
+            "z-index": "8",
+            "position": "absolute",
+            "left": "73px",
+            "top": "293px",
+            "width": "1102px",
+            "height": "622px"
+        });
+        var imageHtml = '<img src="'+backgroundImage+'" style="left:0px;top:0px;max-width:1102px; max-height: 622px" /></img>';
+         $("#main-image-container").append(imageHtml);
+    } else {
+        $("#main-image-container").css({
+            "z-index": "8",
+            "position": "absolute",
+            "left": "297px",
+            "top": "293px",
+            "width": "878px",
+            "height": "494px"
+        });
+        var caption = pageBackgroundCaptions[selectedPage];
+
+        var imageHtml = '<img src="'+backgroundImage+'" style="max-width:878px; max-height: 494px" /></img>';
+        if (caption) {
+            var imageName = backgroundImage.split('_')[3];
+            var imageDimensions = imageName.split('.')[0];
+            var dimensions = imageDimensions.split('x');
+            var width = dimensions[0];
+            var height = dimensions[1];
+
+            imageHtml += '<div style="color: #ffffff; font-size: 15.5px; line-height: 21px; text-align: left; padding-top:10px; letter-spacing:.5px; font-family:\'NHaasGroteskDSStd-45Lt\'; width: '+width+
+                    'px;height: 100px;left: 297px;">'+caption+'</div>';
+        }
+        $("#main-image-container").append(imageHtml);
+    }
+
+}//End of Function - setBackgroundImage
+
+//function to set background video
+function setBackgroundVideo(largeAsset) {
+    var videoFile = pageBackgroundVideos[selectedPage];
+    var videoBackgroundFile = pageBackgroundVideoLeadImages[selectedPage];
+    var caption = pageBackgroundCaptions[selectedPage];
+
+	var posterHtml = "";
+    if (videoBackgroundFile)
+    {
+    		posterHtml = 'poster="' + videoBackgroundFile + '"';
+    }
+    
+    if (videoFile && largeAsset) {
+        $("#background-video-container").css({
+            "z-index": "8",
+            "position": "absolute",
+            "left": "73px",
+            "top": "293px",
+            "width": "1102px",
+            "height": "622px"
+        });
+
+        $("#main-play").css({
+            "position": "absolute",
+            "z-index": "10",
+            "width": "250px",
+            "height": "250px",
+            "left": "485px",
+            "top": "465px",
+            "opacity": ".3"
+        });
+        var videoHtml = '<video controls="controls"  id="background-video" preload="auto" '+posterHtml+' style="left:0px;top:0px;width:1102px; height: 622px"><source src="' + videoFile + '" type="video/mp4" /></video>';
+
+        if(caption) {
+            videoHtml += '<div id="mainAssetCaption" class="mainAssetCaption mainAssetCaptionLg" id="mainAssetCaptionLg" >' + caption + '</div>';
+        }
+        $("#background-video-container").append(videoHtml);
+
+    } else {
+        $("#background-video-container").css({
+            "z-index": "8",
+            "position": "absolute",
+            "left": "297px",
+            "top": "293px",
+            "width": "878px",
+            "height": "494px"
+        });
+
+        $("#main-play").css({
+            "position": "absolute",
+            "z-index": "10",
+            "width": "139px",
+            "height": "139px",
+            "left": "667px",
+            "top": "471px",
+            "opacity": ".3"
+        });
+        var videoHtml = '<video controls="controls"  id="background-video" preload="auto" '+posterHtml+' style="width:878px; height: 494px"><source src="' + videoFile + '" type="video/mp4" /></video>';
+        if(caption) {
+            videoHtml += '<div id="mainAssetCaption" class="mainAssetCaption mainAssetCaptionSm">'+caption+'</div>';
+        }
+        $("#background-video-container").append(videoHtml);
+    }
+    $("#background-video").bind('click', function () {
+        clearOpenImage();
+        playPauseVideo();
+    });
+    $("#background-video").bind('ended', function () {
+        videoPlaying = false;
+        this.currentTime = 0;
+        this.pause();//Need this since we are auto playing.
+        changeVideoControlImages();
+    });
+
+    var img = $("#play-pause");
+    img.attr("src", "img/icons/Play_Icon.png");
+    var img2 = $("#mute-unmute");
+    img2.attr("src", "img/icons/SoundOn_Icon.png");
+}//End of Function - setBackgroundVideo
+
+function changeVideoControlImages() {
+    var img = $("#play-pause");
+    var imgMute = $("#mute-unmute");
+    if (img.attr('src') == "img/icons/Play_Icon.png") {
+        img.attr("src", "img/icons/Pause_Icon.png");
+        if (!muteOverride) {
+            imgMute.attr("src", "img/icons/SoundOn_Icon.png");
+        }
+    } else {
+        $("#main-play").fadeIn(300);
+        img.attr("src", "img/icons/Play_Icon.png");
+        if (!muteOverride) {
+            imgMute.attr("src", "img/icons/SoundOff_Icon.png");
+        }
+    }
+}
+//Play-Pause Video
+function playPauseVideo() {
+    restartMainTimeout();
+    var img = $("#play-pause");
+    if($("#largeImage").get(0))
+    {
+        ignoreClick = true;
+        if (img.attr('src') == "img/icons/Play_Icon.png") {
+            $("#smMain-play").hide();
+            $("#largeImage").get(0).play();
+            videoPlaying = true;
+        } else {
+            $("#smMain-play").fadeIn(100);
+            $("#largeImage").get(0).pause();
+            videoPlaying = false;
+        }
+    }
+    else {
+        if (img.attr('src') == "img/icons/Play_Icon.png") {
+            $("#main-play").stop();
+            $("#main-play").hide();
+            $("#background-video").get(0).play();
+            videoPlaying = true;
+        } else {
+            $("#main-play").fadeIn(100);
+            $("#background-video").get(0).pause();
+            videoPlaying = false;
+        }
+    }
+    changeVideoControlImages();
+}//End of Function -playPauseVideo
+
+//Mute-UnMute Video
+function muteUnmuteVideo() {
+    var img = $("#mute-unmute");
+    muteOverride = !muteOverride;
+    if($("#largeImage").get(0)) {
+        ignoreClick = true;
+        if (img.attr('src') == "img/icons/SoundOn_Icon.png") {
+            $("#largeImage").prop("muted", true);
+            $("#background-video").prop("muted", true);
+            img.attr("src", "img/icons/SoundOff_Icon.png");
+        } else {
+            $("#largeImage").prop("muted", false);
+            $("#background-video").prop("muted", false);
+            img.attr("src", "img/icons/SoundOn_Icon.png");
+        }
+    }else {
+        if (img.attr('src') == "img/icons/SoundOn_Icon.png") {
+            $("#background-video").prop("muted", true);
+            img.attr("src", "img/icons/SoundOff_Icon.png");
+        } else {
+            $("#background-video").prop("muted", false);
+            img.attr("src", "img/icons/SoundOn_Icon.png");
+        }
+    }
+}//End of Function -muteUnmuteVideo
+
+function showSources() {
+    if(pageReferences[selectedPage]) {
+        $("#sources-text").html("");
+        for (var i = 0; i < pageReferences[selectedPage].length; i++) {
+            $("#sources-text").append("<p style='word-wrap: break-word'>" + pageReferences[selectedPage][i].text + "</p>");
+        }
+        if (i > 6)
+        {
+            $("#sources-div").css({"height":"640px"});
+        }
+        else
+        {
+            $("#sources-div").css({"height":"531px"});
+        }
+        $("#sources-click-div").show();
+    }
+}
+
+function clearSources() {
+    $("#sources-click-div").hide();
+}
+
+function displayMore()
+{
+    ignoreClick = true;
+    $("#accordian").animate({width:'toggle'},500);
+
+}
+
+
+</script>
+</head>
+<body style="overflow:hidden;-ms-touch-action:none" oncontextmenu="return false;">
+<div id="main-container">
+    <div id="section-summary"></div>
+    <div id="header">
+        <div id="header-title"></div>
+        <div id="story-title"></div>
+    </div>
+    <div id="story-summary"></div>
+    <div id="body-text"></div>
+</div>
+<div id="control-container">
+    <div id="image1" class="smallImage"></div>
+    <div id="image2" class="smallImage"></div>
+    <div id="image3" class="smallImage"></div>
+    <div id="image4" class="smallImage"></div>
+    <div id="large-image-container"></div>
+    <div id="large-image-footer">
+        <div id="large-image-footer-inner">
+        </div>
+    </div>
+    <img src="img/icons/LgPlayButton.png" id="main-play" onclick="playPauseVideo()"/>
+   <!-- <img src="img/icons/prev.png" id="prev" class="arrow"/> -->
+   <!-- <img src="img/icons/next.png" id="next" class="arrow"/> -->
+
+    <div id="main-image-container"></div>
+    <div id="background-video-container"></div>
+    <div class="video-controls" id="more-control-div">
+        <img src="img/icons/More_Button.png" alt="More" id="more" onclick="displayMore()"/>
+    </div>
+    <div class="back-button" id="backButton-div" onclick="loadNextPrevPageOrFinalUrl('prev')">
+        <img src="img/icons/Back_Button.png" id="backButton" alt="Back" />
+    </div>
+    <div class="next-button"id="nextButton-div" onclick="loadNextPrevPageOrFinalUrl('next')">
+        <img src="img/icons/Next_Button.png" id="nextButton" alt="Next" />
+    </div>
+    <div class="video-controls" id="home-div" onclick="returnHome()">
+        <img src="img/icons/Home_Icon.png" id="home"/>
+    </div>
+    <div class="video-controls" id="play-pause-div" onclick="playPauseVideo()">
+        <img src="img/icons/Play_Icon.png" id="play-pause"/>
+    </div>
+    <div class="video-controls" id="mute-unmute-div" onclick="muteUnmuteVideo()">
+        <img src="img/icons/SoundOn_Icon.png" id="mute-unmute" alt="Un mute"/>
+    </div>
+    <div class="video-controls" id="sources-icon-div" onclick="showSources()">
+        <img src="img/icons/Source_Icon.png" id="sources" alt="Sources" />
+    </div>
+
+</div>
+<div id="sources-click-div" onclick="clearSources()">
+    <div id="sources-div">
+        <div id="sources-summary">Sources</div>
+        <div id="sources-text">
+        </div>
+    </div>
+</div>
+<div id="accordian" style="display:none;">
+    <div class="more">
+        <img src="img/MORE-menuTxt.png"/>
+    </div>
+    <ul class="main_menu">
+        <li>
+            <h3>About</br>The Medicines Company</h3>
+            <ul>
+                <li onclick="window.location = '../More/index.html?pagename=0-Our%20Global%20Company';"><a href="#" style="padding-top: 8px">Our Global Company</a></li>
+                <li onclick="window.location = '../More/index.html?pagename=0-Our%20History';"><a href="#" style="padding-top: 8px">Our</br>History</a></li>
+                <li onclick="window.location = '../More/index.html?pagename=0-Our%20Values';"><a href="#" style="padding-top: 8px">Our</br>Values</a></li>
+                <li onclick="window.location = '../More/index.html?pagename=0-Our%20Purpose';"><a href="#" style="padding-top: 8px">Our</br>Purpose</a></li>
+            </ul>
+        </li>
+        <!-- we will keep this LI open by default -->
+        <li onclick="window.location = '../More/index.html?pagename=0-About%20The%20Lab';">
+            <h3>About</br>The Lab</h3>
+        </li>
+        <li onclick="returnHome();">
+            <h3>Return to</br>Exhibition</h3>
+        </li>
+    </ul>
+</div>
+
+</body>
+</html>

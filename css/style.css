@@ -1,0 +1,537 @@
+
+body{
+	margin:auto;
+    -ms-user-select:none;
+}
+.quoteColor
+{
+    color:#9f9f9f;
+    font-style:italic;
+}
+
+#mainAssetCaption b
+{
+    font-family:'NHaasGroteskDSStd-65Md';
+}
+.mainAssetCaption
+{
+    color: #ffffff;
+    font-size: 17px;
+    line-height: 22px;
+    text-align: left;
+    position:absolute;
+    padding-top:10px;
+    letter-spacing:.5px;
+    font-family:'NHaasGroteskDSStd-45Lt';
+}
+.mainAssetCaptionLg
+{
+    width:1102px;
+    height: 100px
+}
+.mainAssetCaptionSm
+{
+    width:878px ;
+    height: 100px;
+}
+
+#header-container{
+	width:1920px;
+	text-align: center;
+	height: 70px;
+}
+#header-container #container{
+	border:1px solid black;
+	margin: auto;
+	width: 50%;
+	height: 70px;
+	color: red;
+}
+#page-type,
+#large-image-name{
+	padding: 10px;
+}
+#page-type{
+	text-align: center;
+	float:left;
+}
+#large-image-name{
+	text-align: left;
+	float:right;
+}
+#control-container{
+	-ms-touch-action: none;
+}
+#main-container{
+	/*top: 80px;*/
+	width:1920px;
+	height:1080px;
+	border:1px solid black;
+	position: absolute;
+	-ms-touch-action: none;
+	background-color: black;
+}
+#line{
+	left: 1193px;
+	height: 1080px;
+	border: 1px solid black;
+	border-bottom: 0px;
+	position: absolute;
+}
+#header{
+	position: absolute;
+	top: 37px;
+	left: 1193px;
+	width: 654px;
+}
+#header-title,
+#story-title{
+	color: #ffffff;
+	font-size: 36px;
+	line-height: 40px;
+	text-align: left;
+	font-family: "NHaasGroteskDSStd-65Md";
+}
+#header-title{
+	color: #ec0972;
+}
+#section-summary
+{
+	color: #ffffff;
+	position: absolute;
+	font-size: 60px;
+	line-height: 60px;
+	text-align: left;
+	font-family: "NHaasGroteskDSStd-35XLt";
+	z-index:1;
+	top: 293px;
+	left: 1193px;
+	width: 654px;
+	height: 622px;
+}
+#section-summary-controls
+{
+	position: absolute;
+	z-index:10;
+	top: 762px;
+	left: 746px;
+	width: 500px;
+	height: 120px;
+}
+#main-play{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 120px;
+	height: 120px;
+	cursor: pointer;
+}
+#main-forward{
+	position: absolute;
+	top: 0px;
+	left: 304px;
+	width: 120px;
+	height: 120px;
+	cursor: pointer;
+}
+
+#story-summary{
+	color: #ffffff;
+	position: absolute;
+	font-size: 24px;
+	line-height: 28px;
+	text-align: left;
+	font-family: "NHaasGroteskDSStd-65Md";
+	z-index:1;
+	top:293px;
+	width: 654px;
+	left: 1193px;
+}
+#body-text{
+	z-index:1;
+	position: absolute;
+	top: 421px;
+	left: 1193px;
+	width: 654px;
+	height: 585px;
+	/*border: 1px solid black;*/
+	font-size: 17px;
+	line-height: 22px;
+	letter-spacing:.5px;
+	text-align: left;
+	color: #ffffff;
+	overflow: inline;
+	font-family: "NHaasGroteskDSStd-45Lt";
+}
+#large-image-footer-inner{
+	z-index:1;
+	position: absolute;
+	padding:18px;
+	/*border: 1px solid black;*/
+	font-size: 15.5px;
+	line-height: 21px;
+	text-align: left;
+	letter-spacing:.5px;
+	color: #ffffff;
+	font-family: "NHaasGroteskDSStd-45Lt";
+}
+#image1, #image2, #image3{
+	top: 0px;
+}
+.disablePanZoom {
+  -ms-touch-action: none; /* Disables all pan/zoom behaviors and fire pointer events in JavaScript instead. */
+}
+
+.smallImage{
+	z-index:10;
+	position: absolute;
+	left: 0px;
+	width: 206px;
+	height: 238px;
+  display: none;
+  cursor: pointer;
+}
+.selectedLayerSmallImage{
+	opacity:.65;
+	background-color:#000000;
+	z-index:1;
+	position: absolute;
+	left: 0px;
+	width: 206px;
+	height: 238px;
+}
+
+#large-image-container{
+	z-index:9999;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+}
+#largeImage{
+	/*border: 1px solid black;*/
+}
+
+/* Next-Prev arrows */
+.arrow{
+    position: absolute;
+    z-index:9999;
+    cursor: pointer;
+    top:293px;
+    width:152px;
+    height:495px;
+    display:none;
+}
+#prev{
+    left:18px;
+}
+#nextButton{
+    height:30px;
+}
+
+.next-button{
+    z-index:999;
+    position: absolute;
+    top: 1009px;
+    cursor: pointer;
+    left: 1362px;
+    height:29px;
+}
+.next-button-opac{
+		opacity:0.4;
+}
+
+#backButton{
+    height:30px;
+}
+
+.back-button{
+    z-index:999;
+    position: absolute;
+    top: 1009px;
+    cursor: pointer;
+    left: 1200px;
+    height:29px;
+}
+.back-button-opac{
+    opacity:0.4;
+}
+
+#main-play-detail
+{
+	z-index:10;
+	position: absolute;
+  cursor: pointer;
+}
+/* Video Player icons */
+.video-controls{
+		z-index:1;
+    position: absolute;
+    top: 1009px;
+   	opacity:0.4;
+}
+#home {
+    cursor: pointer;
+    height: 30px;
+}
+#play-pause {
+    cursor: pointer;
+    height: 30px;
+}
+#mute-unmute {
+    cursor: pointer;
+    height: 30px;
+}
+#sources {
+    cursor: pointer;
+    height: 30px;
+}
+#more {
+    cursor: pointer;
+    width: 105px;
+}
+#more-control-div{
+    opacity:0.4;
+    position: absolute;
+    top: 1004px;
+    cursor: pointer;
+    width:105px;
+    left: 1739px;
+}
+
+#home-div {
+    cursor: pointer;
+    text-align: center;
+    width:40px;
+    height:50px;
+    left: 1536px;
+}
+#play-pause-div {
+    cursor: pointer;
+    text-align: center;
+    width:40px;
+    height:50px;
+    left: 1581px;
+}
+#mute-unmute-div {
+    cursor: pointer;
+    text-align: center;
+    width:40px;
+    height:50px;
+    left: 1621px;
+}
+#sources-icon-div {
+    cursor: pointer;
+    text-align: center;
+    width:40px;
+    height:50px;
+    left: 1664px;
+}
+
+#sources-click-div
+{
+    width:1920px;
+    height:1080px;
+    border:0px;
+    z-index:999997;
+    position: absolute;
+    background-color: transparent;
+}
+#sources-div{
+    opacity: 0.9;
+    top:293px;
+    left:504px;
+    width:670px;
+    height: 531px;
+    background-color:#ffffff;
+    z-index:999999;
+    position: absolute;
+}
+#sources-summary{
+    color: #000000;
+    position: absolute;
+    font-size: 24px;
+    line-height: 28px;
+    text-align: left;
+    font-family: "NHaasGroteskDSStd-65Md";
+    z-index:1;
+    top:18px;
+    width: 654px;
+    left: 18px;
+}
+#sources-text{
+    z-index:1;
+    position: absolute;
+    top: 70px;
+    left: 18px;
+    width: 640px;
+    min-height: 520px;
+    font-size: 17px;
+    line-height: 22px;
+    letter-spacing:.5px;
+    text-align: left;
+    color: #000000;
+    font-family: "NHaasGroteskDSStd-45Lt";
+}
+.sources-table {
+    display: table;
+    width:640px;
+}
+
+.sources-row  {
+    display: table-row;
+    display: inline-table;
+    padding-bottom: 18px;
+}
+.sources-cell-number {
+    display: table-cell;
+    width: 30px;
+}
+.sources-cell {
+    display: table-cell;
+    width: 630px;
+    word-wrap: break-word;
+}
+/* Video Player icons 
+.video-controls{
+		z-index:1;
+    position: absolute;
+    top: 1009px;
+   	opacity:0.4;
+}
+#nextButton{
+	  cursor: pointer;
+    left: 1715px;
+}
+#home {
+    cursor: pointer;
+    height: 30px;
+    left: 1658px;
+}
+#play-pause {
+    cursor: pointer;
+    height: 30px;
+    left: 1773px;
+}
+#mute-unmute {
+    cursor: pointer;
+    height: 30px;
+    left: 1813px;
+}
+*/
+.inactive-controls {
+	opacity:0.2;
+}
+
+/*  MENU */
+#accordian {
+    width:297px;
+    height:717px;
+    background-color: #d1d3d4;
+    margin:0px 0px 84px 0px;
+    z-index:999;
+
+}
+/*heading styles*/
+#accordian h3{
+    padding: 8px 0px 0px 10px;
+    width: 196px;
+    height: 77px;
+    background-color: #939598;
+    display: block;
+    margin-bottom: 15px;
+    margin-top: 0px;
+    color: #ffffff;
+    font-size: 22px;
+    line-height: 24px;
+    letter-spacing: .5px;
+    text-align: left;
+    font-family: "NHaasGroteskDSStd-65Md";
+    cursor: pointer;
+}
+
+/*heading hover effect*/
+#accordian h3:hover {
+    text-shadow: 0 0 1px rgba(255, 255, 255, 0.7);
+}
+/*iconfont styles*/
+#accordian h3 span {
+    margin-right: 10px;
+}
+/*list items*/
+#accordian li {
+    list-style-type: none;
+    padding: 0px;
+    margin: 0px;
+    float:left;
+
+}
+/*links*/
+#accordian ul ul li a {
+    text-decoration: none;
+    color: #ffffff;
+    font-size: 22px;
+    line-height: 24px;
+    text-align: left;
+    font-family: "NHaasGroteskDSStd-65Md";
+    display: block;
+    padding-left: 10px;
+    /*transition for smooth hover animation*/
+    width: 161px;
+    height: 52px;
+    background-color: #939598;
+    margin-bottom: 15px;
+
+}
+/*hover effect on links*/
+
+/*Lets hide the non active LIs by default*/
+#accordian ul ul {
+    display: none;
+}
+#accordian ul ul
+{
+    padding-left:34px;
+}
+#accordian li.active ul {
+    display: block;
+}
+.more
+{
+    font-size: 22px;
+    line-height: 24px;
+    text-align: left;
+    font-family: "NHaasGroteskDSStd-65Md";
+    text-transform:uppercase;
+    padding-top:18px;
+    padding-bottom:10px;
+    padding-left:18px;
+    color:#939598;
+}
+.active
+{
+    background-color:#000 !important;
+}
+
+.main_menu
+{
+    padding-left: 15px;
+    margin: 0px;
+}
+.main_menu ul li a:active
+{
+    background-color:#000 !important;
+}
+#accordian_new
+{
+    position: absolute;
+    top: 360px;
+    left: 1530px;
+    float:right;
+}
+#accordian
+{
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    float: right;
+}
